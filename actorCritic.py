@@ -30,13 +30,13 @@ class ActorCritic:
 
         self.stateInput = Input(shape=(observation_space))
 
-        self.aD1 = Dense(100, activation="relu")(self.stateInput)
-        self.aD2 = Dense(50, activation="relu")(self.aD1)
+        self.aD1 = Dense(516, activation="relu")(self.stateInput)
+        self.aD2 = Dense(64, activation="relu")(self.aD1)
         self.aOutput = Dense(self.aOutput_dims, activation="softmax")(self.aD2)
 
-        self.cD1 = Dense(100, activation="relu")(self.stateInput)
-        self.cD2 = Dense(50, activation="relu")(self.cD1)
-        self.cOutput = Dense(1, activation=None)
+        self.cD1 = Dense(128, activation="relu")(self.stateInput)
+        self.cD2 = Dense(32, activation="relu")(self.cD1)
+        self.cOutput = Dense(1, activation=None)(self.cD2)
 
         self.Actor = Model(inputs=self.stateInput, outputs=self.aOutput)
         self.Critic = Model(inputs=self.stateInput, outputs=self.cOutput)
@@ -111,14 +111,5 @@ class ActorCritic:
         self.Critic.optimizer.apply_gradients(zip(cGradient, self.Critic.trainable_variables))
         
         del tape
-
-
-
-
-
-
-
-
-
 
 

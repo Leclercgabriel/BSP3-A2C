@@ -1,14 +1,14 @@
 import gymnasium as gym
 import numpy as np
-from actorCritic import Agent
+from actorCritic import ActorCritic
 from utils import plot_learning_curve
 from datetime import datetime
 import atexit
 
 if __name__ == "__main__":
     env = gym.make("LunarLander-v2")
-    agent = Agent(alpha=1e-4, gamma=0.55, action_space=env.action_space.n)
-    n_games = 300
+    agent = ActorCritic(alpha=1e-5, gamma=0.50, action_space=env.action_space.n)
+    n_games = 1000
 
     filePath = "tmp/img/LunarLander-g"+str(agent.gamma)+"-a"+str(agent.alpha)+"-"+str(datetime.now())+".png"
     figureFile = filePath
@@ -31,10 +31,10 @@ if __name__ == "__main__":
                 if not loadCheckpoint:
                     agent.learn(observation, reward, observation1, done)
                 observation = observation1
-        except AssertionError:
+        except KeyboardInterrupt:
             x = [j+1 for j in range (i)]
             plot_learning_curve(x, scoreHistory, figureFile)
-
+        
         scoreHistory.append(score)
         averageScore = np.mean(scoreHistory[-100:])
         
