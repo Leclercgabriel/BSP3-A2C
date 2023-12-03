@@ -9,7 +9,7 @@ from tensorflow.keras.layers import Dense, Input
 from tensorflow.keras.models import Model
 
 class ActorCritic:
-    def __init__(self, alpha=0.01, gamma=0.95, action_space=4, observation_space=8):
+    def __init__(self, alpha=0.01, gamma=0.99, action_space=4, observation_space=8, a1=64, a2=32, c1=64, c2=32):
         super(ActorCritic, self).__init__()
         self.alpha = alpha
         self.gamma = gamma
@@ -20,23 +20,23 @@ class ActorCritic:
         self.actor_checkpoint_file = os.path.join("logs/actor")
         self.critic_checkpoint_file = os.path.join("logs/critic")
 
-        #self.aD1_dims = aD1_dims
-        #self.aD2_dims = aD2_dims
+        self.aD1_dims = a1
+        self.aD2_dims = a2
         self.aOutput_dims = action_space
 
-        #self.cD1_dims = cD1_dims
-        #self.cD2_dims = acD2_dims
-        #self.cOutput_dims = 1
+        self.cD1_dims = c1
+        self.cD2_dims = c2
+        self.cOutput_dims = 1
 
         self.stateInput = Input(shape=(observation_space))
 
-        self.aD1 = Dense(86, activation=tf.keras.layers.LeakyReLU())(self.stateInput)
-        self.aD2 = Dense(32, activation=tf.keras.layers.LeakyReLU())(self.aD1)
+        self.aD1 = Dense(self.aD1_dims, activation=tf.keras.layers.LeakyReLU())(self.stateInput)
+        self.aD2 = Dense(self.aD2_dims, activation=tf.keras.layers.LeakyReLU())(self.aD1)
         self.aOutput = Dense(self.aOutput_dims, activation="softmax")(self.aD2)
 
-        self.cD1 = Dense(86, activation=tf.keras.layers.LeakyReLU())(self.stateInput)
-        self.cD2 = Dense(32, activation=tf.keras.layers.LeakyReLU())(self.cD1)
-        self.cOutput = Dense(1, activation=None)(self.cD2)
+        self.cD1 = Dense(self.cD1_dims, activation=tf.keras.layers.LeakyReLU())(self.stateInput)
+        self.cD2 = Dense(self.cD2_dims, activation=tf.keras.layers.LeakyReLU())(self.cD1)
+        self.cOutput = Dense(self.cOutput_dims, activation=None)(self.cD2)
 
         self.Actor = Model(inputs=self.stateInput, outputs=self.aOutput)
         self.Critic = Model(inputs=self.stateInput, outputs=self.cOutput)
@@ -52,10 +52,10 @@ class ActorCritic:
         proba = self.Actor(state)
 
         actionProba = tfp.distributions.Categorical(probs=proba)
-        action = actionProba.sample()
+        action = actionProba.sample().numpy()[0]
         self.action = action
 
-        return action.numpy()[0]
+        return action, actionProba, proba
 
     def aSave(self):
         print("...saving actor...")
@@ -84,8 +84,8 @@ class ActorCritic:
         self.cLoad()
 
     def learn(self, state, reward, state1, done):
-        state = tf.convert_to_tensor([state], dtype=tf.float32)
-        state1 = tf.convert_to_tensor([state1], dtype=tf.float32)
+        state = tf.convert_to_tensor([state], dtype=tf.float64)
+        state1 = tf.convert_to_tensor([state1], dtype=tf.float64)
         reward = tf.convert_to_tensor(reward, dtype=tf.float32)
         with tf.GradientTape(persistent=True) as tape:
             
@@ -111,5 +111,4 @@ class ActorCritic:
         self.Critic.optimizer.apply_gradients(zip(cGradient, self.Critic.trainable_variables))
         
         del tape
-
 

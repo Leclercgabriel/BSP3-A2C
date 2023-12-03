@@ -8,10 +8,10 @@ import sys
 
 if __name__ == "__main__":
     env = gym.make("LunarLander-v2")
-    agent = ActorCritic(alpha=1e-4, gamma=0.90, action_space=env.action_space.n)
+    agent = ActorCritic(alpha=1e-4, gamma=0.95, action_space=env.action_space.n, a1=86, a2=64, c1=88, c2=32 )
     n_games = 1500
 
-    filePath = "tmp/img/LunarLander"+"-"+str(datetime.now())+"-g"+str(agent.gamma)+"-a"+str(agent.alpha)+".png"
+    filePath = "tmp/img/LunarLander"+"-"+str(datetime.now())+"-g"+str(agent.gamma)+"-a"+str(agent.alpha)+"a1"+str(agent.aD1_dims)+"a2"+str(agent.aD2_dims)+"c1"+str(agent.cD1_dims)+"c2"+str(agent.cD2_dims)+".png"
     figureFile = filePath
     highScore = env.reward_range[0]
     scoreHistory = []
@@ -26,7 +26,7 @@ if __name__ == "__main__":
         score = 0
         try:
             while not done:
-                action = agent.chooseAction(observation)
+                action, actionProba, probs = agent.chooseAction(observation)
                 observation1, reward, done, _, info = env.step(action)
                 score += reward
                 if not loadCheckpoint:
@@ -34,16 +34,14 @@ if __name__ == "__main__":
                 observation = observation1
         except (KeyboardInterrupt, AssertionError, ValueError):
             print(action)
+            print(actionProba.sample())
+            print(probs)
             x = [j+1 for j in range (i)]
             plot_learning_curve(x, scoreHistory, figureFile)
             sys.exit()
 
         scoreHistory.append(score)
         averageScore = np.mean(scoreHistory[-100:])
-
-        if i % 100 == 0 and i >= 100:
-            x = [j+1 for j in range (i)]
-            plot_learning_curve(x, scoreHistory, figureFile)
 
         if averageScore > highScore:
             highScore = averageScore
